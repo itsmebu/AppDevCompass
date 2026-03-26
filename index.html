@@ -488,12 +488,138 @@
       color: var(--text3);
     }
 
+    /* ---- MODAL ---- */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.82);
+      backdrop-filter: blur(6px);
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease;
+    }
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .modal-box {
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 18px;
+      width: 100%;
+      max-width: 680px;
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: translateY(24px) scale(0.97);
+      transition: transform 0.25s ease, opacity 0.22s ease;
+      opacity: 0;
+    }
+    .modal-overlay.open .modal-box {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.2rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .modal-header h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .modal-header h2 i { color: var(--text3); font-size: 1rem; }
+    .modal-close {
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      color: var(--text2);
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      transition: 0.15s;
+      flex-shrink: 0;
+    }
+    .modal-close:hover { background: var(--bg4); color: var(--text); }
+    .modal-body {
+      padding: 1.5rem;
+      overflow-y: auto;
+      flex: 1;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border2) transparent;
+    }
+    .modal-body::-webkit-scrollbar { width: 4px; }
+    .modal-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+    .modal-step-progress {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.2rem;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .modal-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .modal-open-btn {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 7px 18px;
+      border-radius: 6px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .modal-open-btn:hover { background: #ddd; }
+    .guide-category {
+      position: relative;
+    }
+    .guide-category::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 10px;
+      pointer-events: none;
+    }
+
     @media (max-width: 800px) {
       .container { padding: 1rem; }
       .dashboard { flex-direction: column; }
       .sidebar { position: static; max-height: none; max-width: 100%; }
       .site-header { padding: 0.7rem 1rem; }
       .logo-text { font-size: 1rem; }
+      .modal-box { max-height: 92vh; border-radius: 14px; }
     }
   </style>
 </head>
@@ -534,6 +660,27 @@
     <span id="w-btn-text">Start Learning</span>
   </button>
   <p class="welcome-note" id="w-note">Free tutorial — no account required</p>
+</div>
+
+<!-- MODAL POPUP -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box" id="modal-box">
+    <div class="modal-header">
+      <h2><i id="modal-icon" class="fas fa-circle"></i> <span id="modal-title"></span></h2>
+      <button class="modal-close" id="modal-close-btn"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer">
+      <div class="nav-buttons">
+        <button id="modal-prev-btn" class="nav-btn"><i class="fas fa-chevron-left"></i> <span id="modal-prev-txt">Previous</span></button>
+        <button id="modal-next-btn" class="nav-btn"><span id="modal-next-txt">Next</span> <i class="fas fa-chevron-right"></i></button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="step-indicator" id="modal-step-ind"></span>
+        <button class="modal-open-btn" id="modal-open-full-btn"><i class="fas fa-expand"></i> <span id="modal-open-txt">Open Full Guide</span></button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- MAIN APP -->
@@ -654,7 +801,7 @@ const GUIDES = {
       },
       {
         step: { en: "Run Your App (LAN Mode)", bis: "I-run ang App (LAN Mode)" },
-        code: "EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0 REACT_NATIVE_PACKAGER_HOSTNAME=192.168.100.160 npx expo start --lan [note: Must your IP ADRESS]",
+        code: "npx expo start --lan / EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0 REACT_NATIVE_PACKAGER_HOSTNAME=192.168.100.160 npx expo start --lan [ Note: update this whith your IP & Must be same Wifi",
         desc: { en: "Starts the development server. Scan QR code with Expo Go app.", bis: "I-start ang development server. I-scan ang QR code gamit ang Expo Go." }
       },
       {
@@ -930,7 +1077,7 @@ function renderSidebar() {
   }
   sidebarEl.innerHTML = html;
   document.querySelectorAll('.guide-category').forEach(el => {
-    el.addEventListener('click', () => loadGuide(el.getAttribute('data-id')));
+    el.addEventListener('click', () => openModal(el.getAttribute('data-id')));
   });
 }
 
@@ -943,6 +1090,102 @@ function loadGuide(guideId) {
   renderSidebar();
   renderCurrentStep();
 }
+
+// ---- MODAL STATE ----
+let modalGuideData = null;
+let modalStepIndex = 0;
+
+function openModal(guideId) {
+  const guide = GUIDES[guideId];
+  if (!guide) return;
+  modalGuideData = guide;
+  modalStepIndex = 0;
+  renderModalStep();
+  const overlay = document.getElementById('modal-overlay');
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  const overlay = document.getElementById('modal-overlay');
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function openFullGuide() {
+  if (!modalGuideData) return;
+  closeModal();
+  loadGuide(modalGuideData.id);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderModalStep() {
+  if (!modalGuideData) return;
+  const guide = modalGuideData;
+  const L = LANG[currentLang];
+  const steps = guide.steps;
+  const step = steps[modalStepIndex];
+  const total = steps.length;
+
+  document.getElementById('modal-icon').className = `fas ${guide.icon}`;
+  document.getElementById('modal-title').textContent = t(guide.title);
+  document.getElementById('modal-step-ind').innerHTML = `<i class="fas fa-list-ol"></i> ${L.stepOf(modalStepIndex+1, total)}`;
+  document.getElementById('modal-prev-txt').textContent = L.prev;
+  document.getElementById('modal-next-txt').textContent = L.next;
+  document.getElementById('modal-open-txt').textContent = currentLang === 'bis' ? 'Ablihi ang Tibuok' : 'Open Full Guide';
+  document.getElementById('modal-prev-btn').disabled = modalStepIndex === 0;
+  document.getElementById('modal-next-btn').disabled = modalStepIndex === total - 1;
+
+  let codeHtml = "";
+  if (step.code) {
+    codeHtml = `
+      <div>
+        <div class="code-header">
+          <button class="copy-btn modal-copy" data-copy="${escapeAttr(step.code)}"><i class="far fa-copy"></i> ${L.copyBtn}</button>
+        </div>
+        <pre><code>${escapeHtml(step.code)}</code></pre>
+      </div>
+    `;
+  }
+  let noteHtml = step.note ? `<div class="note-box"><i class="fas fa-info-circle"></i> <strong>${L.noteLabel}</strong> ${escapeHtml(t(step.note))}</div>` : "";
+  let warnHtml = step.warning ? `<div class="warning-box"><i class="fas fa-exclamation-triangle"></i> <strong>${L.warnLabel}</strong> ${escapeHtml(t(step.warning))}</div>` : "";
+  let descHtml = step.desc ? `<div class="step-desc">${escapeHtml(t(step.desc))}</div>` : "";
+
+  document.getElementById('modal-body').innerHTML = `
+    <div class="step-card" style="margin-top:0;">
+      <div class="step-title">${modalStepIndex+1}. ${escapeHtml(t(step.step))}</div>
+      ${descHtml}${codeHtml}${noteHtml}${warnHtml}
+    </div>
+  `;
+
+  document.querySelectorAll('.modal-copy').forEach(btn => {
+    btn.addEventListener('click', () => {
+      navigator.clipboard.writeText(btn.getAttribute('data-copy'));
+      const orig = btn.innerHTML;
+      btn.innerHTML = `<i class="fas fa-check"></i> ${L.copied}`;
+      setTimeout(() => { btn.innerHTML = orig; }, 1500);
+    });
+  });
+}
+
+// Modal event listeners (set once)
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+  document.getElementById('modal-open-full-btn').addEventListener('click', openFullGuide);
+  document.getElementById('modal-prev-btn').addEventListener('click', () => {
+    if (modalStepIndex > 0) { modalStepIndex--; renderModalStep(); }
+  });
+  document.getElementById('modal-next-btn').addEventListener('click', () => {
+    if (modalGuideData && modalStepIndex < modalGuideData.steps.length - 1) { modalStepIndex++; renderModalStep(); }
+  });
+  document.getElementById('modal-overlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('modal-overlay')) closeModal();
+  });
+  // Keyboard close
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
+});
 
 function renderCurrentStep() {
   if (!currentGuideData) return;
